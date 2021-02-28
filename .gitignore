@@ -1,0 +1,15 @@
+.idea
+*.rdb
+*.db
+*.swp
+dump.rdb
+*.log
+*_logs.json
+*_logs.*
+
+# Project exclude paths
+/venv/
+/logs/
+__pycache__
+.DS_Store
+/tmp/
