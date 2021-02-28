@@ -5,9 +5,7 @@ from starlette.responses import JSONResponse
 
 from .httpx_requests import (
     get_user_profile_web,
-    get_user_profile_mobile,
-    get_login_web,
-    get_login_mobile
+    get_user_profile_mobile
 )
 
 routers = APIRouter()
@@ -17,7 +15,10 @@ routers = APIRouter()
 async def profile_web(
         request: Request
 ):
-    profile_response = await get_user_profile_web(request)
+    profile_response = await get_user_profile_web(
+        request=request,
+        params=request.query_params.dict
+    )
     return JSONResponse(content=profile_response, status_code=status.HTTP_200_OK)
 
 
@@ -25,25 +26,8 @@ async def profile_web(
 async def profile_mobile(
         request: Request
 ):
-    profile_response = await get_user_profile_mobile(request)
+    profile_response = await get_user_profile_mobile(
+        request=request,
+        params=request.query_params.dict
+    )
     return JSONResponse(content=profile_response, status_code=status.HTTP_200_OK)
-
-
-@routers.post('/web/login/')
-async def login_web(
-        data: dict
-):
-    login_response = await get_login_web(
-        data=data
-    )
-    return JSONResponse(content=login_response, status_code=status.HTTP_200_OK)
-
-
-@routers.post('/mobile/login/')
-async def login_mobile(
-        data: dict
-):
-    login_response = await get_login_mobile(
-        data=data
-    )
-    return JSONResponse(content=login_response, status_code=status.HTTP_200_OK)

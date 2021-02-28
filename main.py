@@ -1,9 +1,15 @@
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, Request
 from starlette.middleware import Middleware
 
 from starlette.middleware.cors import CORSMiddleware
 
-from middlewares import InitLocalVarsMiddleware, AuthMiddleware, AfterAuthMiddleware
+from middlewares.middlewares import InitLocalVarsMiddleware, AfterAuthMiddleware, ProxyMiddleware
+if os.environ.get('GATEWAY_PLATFORM') == 'web':
+    from middlewares.web import AuthMiddleware
+else:
+    from middlewares.mobile import AuthMiddleware
+
 from routers import routers
 
 
@@ -44,8 +50,17 @@ middleware = [
         ),
     Middleware(InitLocalVarsMiddleware),
     Middleware(AuthMiddleware),
-    Middleware(AfterAuthMiddleware)
+    Middleware(AfterAuthMiddleware),
+    Middleware(ProxyMiddleware)
 ]
 
-app = FastAPI(middleware=middleware)
+app = FastAPI(
+    middleware=middleware,
+    root_path='kek'
+)
 app.include_router(routers)
+
+
+@app.get("/app")
+def read_main(request: Request):
+    return {"message": "Hello World", "root_path": request.scope.get("root_path")}

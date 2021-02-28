@@ -5,12 +5,14 @@ from gateway.constants import AUTH_ACCESS_TOKEN_EXPIRE, AUTH_REFRESH_TOKEN_EXPIR
 from settings import COOKIES_DOMAIN, IS_SECURE_COOKIES
 
 
-async def collect_auth_params():
-    return {
+async def collect_auth_params(params: dict):
+    params.update({
         'user_id': _thread_locals._user.get('user_id', None),
         'Authorization': _thread_locals._user.get('Authorization', None),
         'refresh_token': _thread_locals._user.get('refresh_token', None)
-    }
+    })
+
+    return params
 
 
 async def update_auth_local_storage(
@@ -51,7 +53,6 @@ async def get_response_with_auth_cookies(
 async def get_response_with_auth_headers(
         response: Response
 ) -> Response:
-
     response.headers['Authorization'] = _thread_locals._user.get('Authorization', '')
     response.headers['refresh_token'] = _thread_locals._user.get('refresh_token', '')
     return response

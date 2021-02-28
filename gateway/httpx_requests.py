@@ -1,7 +1,7 @@
 import json
 
 import httpx
-from starlette.requests import Request
+from fastapi import Request
 
 from gateway.utils import collect_auth_params, update_auth_local_storage
 from gateway import _thread_locals
@@ -10,8 +10,9 @@ from settings import MAIN_SERVER_URL
 
 async def request_get(
         url: str,
-        params: dict
+        params: dict = None
 ):
+
     async with httpx.AsyncClient() as client:
         r = await client.get(
             url,
@@ -47,8 +48,29 @@ async def request_post(
     return None
 
 
-async def get_user_profile_web(request: Request) -> dict:
-    params = await collect_auth_params()
+async def request_put(
+        url: str,
+        data: dict,
+        params: dict = None
+):
+    async with httpx.AsyncClient() as client:
+        r = await client.put(
+            url,
+            headers={'Content-Type': 'application/json'},
+            params=params,
+            data=json.dumps(data),
+        )
+        if r.status_code == httpx.codes.OK:
+            await update_auth_local_storage(
+                access_token=r.cookies.get('Authorization', ''),
+                refresh_token=r.cookies.get('refresh_token', '')
+            )
+            return r.json()
+    return None
+
+
+async def get_user_profile_web(request: Request, params: dict) -> dict:
+
     user_id = _thread_locals._user["user_id"]
     return {
         'profile': await request_get(
@@ -72,8 +94,7 @@ async def get_user_profile_web(request: Request) -> dict:
     }
 
 
-async def get_user_profile_mobile(request: Request) -> dict:
-    params = await collect_auth_params()
+async def get_user_profile_mobile(request: Request, params: dict) -> dict:
     user_id = _thread_locals._user["user_id"]
     return {
         'profile': await request_get(
@@ -95,21 +116,3 @@ async def get_user_profile_mobile(request: Request) -> dict:
             data={'user_id': user_id}
         )
     }
-
-
-async def get_login_web(
-        data: dict
-):
-    return await request_post(
-        f'{MAIN_SERVER_URL}/api/authentication/v1/login/',
-        data=data
-    )
-
-
-async def get_login_mobile(
-        data: dict
-):
-    return await request_post(
-        f'{MAIN_SERVER_URL}/api/authentication/v1/login/',
-        data=data
-    )
