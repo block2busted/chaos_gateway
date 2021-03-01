@@ -3,7 +3,7 @@ import json
 import stackprinter
 from loguru import logger
 
-# from worker.celery_worker import app as celery_app
+from worker.celery_worker import app as celery_app
 
 
 _logger = logger
@@ -56,33 +56,30 @@ def loguru_exception_json_formatter(record):
     return '{extra[serialized]}'
 
 
-# def send_notification(logs):
-#     """Send logs to rabbit"""
-#     celery_app.send_task(
-#         'worker.send_logs',
-#         args=(
-#             logs,
-#         )
-#     )
+def send_notification(logs):
+    """Send logs to rabbit"""
+    celery_app.send_task(
+        'worker.send_logs',
+        args=(
+            logs,
+        )
+    )
 
 
 _logger.add(
-    # send_notification,
-    'logs/request_logs.json',
+    send_notification,
     level='INFO',
     format=loguru_request_json_formatter,
     filter=lambda record: record['extra']['records'].get('request_data'),
 )
 _logger.add(
-    # send_notification,
-    'logs/response_logs.json',
+    send_notification,
     level='INFO',
     filter=lambda record: record['extra']['records'].get('response_data'),
     format=loguru_response_json_formatter,
 )
 _logger.add(
-    # send_notification,
-    'logs/exception_logs.json',
+    send_notification,
     level='ERROR',
     filter=lambda record: record['extra'].get('exception'),
     format=loguru_exception_json_formatter,
